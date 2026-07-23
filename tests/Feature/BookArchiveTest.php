@@ -2,6 +2,7 @@
 
 use App\Livewire\Books\BookForm;
 use App\Livewire\Books\BookIndex;
+use App\Livewire\Books\BookShow;
 use App\Models\Book;
 use App\Models\BookFile;
 use App\Models\User;
@@ -100,7 +101,10 @@ test('user can create a book from the index modal and preview its uploaded file'
     expect($book->book_number)->toBe('2026')
         ->and($book->primaryFile)->not->toBeNull();
 
-    $component->assertSee(route('books.files.preview', $book->primaryFile), false);
+    $component
+        ->call('openFilePreview', $book->primaryFile->id)
+        ->assertSee('<iframe', false)
+        ->assertSee(route('books.files.preview', $book->primaryFile), false);
     Storage::disk('local')->assertExists($book->primaryFile->file_path);
 });
 
@@ -246,4 +250,36 @@ test('private files are available only through authenticated routes', function (
     $this->get(route('books.files.download', $file))
         ->assertSuccessful()
         ->assertDownload('private.pdf');
+});
+
+test('uploaded books are previewed in an iframe without a download link', function () {
+    Storage::fake('local');
+    $this->actingAs(User::factory()->create());
+
+    $book = Book::factory()->create();
+    $path = 'books/'.$book->id.'/preview.pdf';
+    Storage::disk('local')->put($path, '%PDF');
+    $file = BookFile::factory()->for($book)->create([
+        'file_path' => $path,
+        'original_name' => 'preview.pdf',
+        'mime_type' => 'application/pdf',
+        'file_type' => 'pdf',
+        'is_primary' => true,
+    ]);
+
+    Livewire::test(BookIndex::class)
+        ->call('openFilePreview', $file->id)
+        ->assertSet('previewFileId', $file->id)
+        ->assertSee('<iframe', false)
+        ->assertSee(route('books.files.preview', $file), false)
+        ->assertDontSee(route('books.files.download', $file), false)
+        ->call('closeFilePreview')
+        ->assertSet('previewFileId', null)
+        ->assertDontSee('<iframe', false);
+
+    Livewire::test(BookShow::class, ['book' => $book])
+        ->call('openFilePreview', $file->id)
+        ->assertSee('<iframe', false)
+        ->assertSee('المعاينة فقط')
+        ->assertDontSee('تحميل');
 });

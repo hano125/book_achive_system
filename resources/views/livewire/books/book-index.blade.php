@@ -67,8 +67,7 @@
                                     <a href="{{ route('books.show', $book) }}" class="btn btn-sm btn-outline-primary" title="عرض التفاصيل"><i class="bx bx-show"></i></a>
                                     <a href="{{ route('books.edit', $book) }}" class="btn btn-sm btn-outline-secondary" title="تعديل"><i class="bx bx-edit"></i></a>
                                     @if ($book->primaryFile)
-                                        <a href="{{ route('books.files.preview', $book->primaryFile) }}" target="_blank" class="btn btn-sm btn-outline-success" title="معاينة الملف الأساسي"><i class="bx bx-file-find"></i></a>
-                                        <a href="{{ route('books.files.download', $book->primaryFile) }}" class="btn btn-sm btn-outline-info" title="تحميل الملف الأساسي"><i class="bx bx-download"></i></a>
+                                        <button type="button" class="btn btn-sm btn-outline-success" wire:click="openFilePreview({{ $book->primaryFile->id }})" title="معاينة الملف الأساسي"><i class="bx bx-file-find"></i></button>
                                     @endif
                                     <button type="button" class="btn btn-sm btn-outline-danger" wire:click="deleteBook({{ $book->id }})" wire:confirm="هل تريد نقل هذا الكتاب إلى سلة المحذوفات؟" title="حذف"><i class="bx bx-trash"></i></button>
                                 </div>
@@ -192,4 +191,6 @@
         </div>
         <div class="modal-backdrop fade show"></div>
     @endif
+
+    <x-ui.file-preview-modal :file="$previewFile" />
 </div>

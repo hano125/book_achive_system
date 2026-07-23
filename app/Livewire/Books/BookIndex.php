@@ -3,9 +3,11 @@
 namespace App\Livewire\Books;
 
 use App\Models\Book;
+use App\Models\BookFile;
 use App\Services\BookService;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
@@ -22,6 +24,9 @@ class BookIndex extends Component
 
     #[Url(as: 'create', except: false)]
     public bool $showCreateModal = false;
+
+    #[Locked]
+    public ?int $previewFileId = null;
 
     #[Url(except: '')]
     public string $search = '';
@@ -75,6 +80,22 @@ class BookIndex extends Component
         $this->newFiles = array_values($this->newFiles);
     }
 
+    public function openFilePreview(int $fileId): void
+    {
+        $file = BookFile::query()
+            ->whereHas('book')
+            ->findOrFail($fileId);
+
+        abort_unless($file->isPdf() || $file->isImage(), 415);
+
+        $this->previewFileId = $file->id;
+    }
+
+    public function closeFilePreview(): void
+    {
+        $this->previewFileId = null;
+    }
+
     public function saveNewBook(BookService $bookService): void
     {
         $validated = $this->validate($this->createBookRules(), $this->createBookMessages(), $this->createBookAttributes());
@@ -117,6 +138,9 @@ class BookIndex extends Component
 
         return view('livewire.books.book-index', [
             'books' => $books,
+            'previewFile' => $this->previewFileId
+                ? BookFile::query()->findOrFail($this->previewFileId)
+                : null,
         ]);
     }
 

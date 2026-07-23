@@ -47,18 +47,11 @@
                                     <small class="text-muted">{{ $file->formatted_file_size }} · {{ $file->file_type }} · {{ $file->created_at->format('Y-m-d') }}</small>
                                 </div>
                                 <div class="d-flex gap-2">
-                                    <a href="{{ route('books.files.preview', $file) }}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bx bx-show me-1"></i> معاينة</a>
-                                    <a href="{{ route('books.files.download', $file) }}" class="btn btn-sm btn-outline-info"><i class="bx bx-download me-1"></i> تحميل</a>
+                                    <button type="button" class="btn btn-sm btn-outline-primary" wire:click="openFilePreview({{ $file->id }})">
+                                        <i class="bx bx-show me-1"></i> معاينة
+                                    </button>
                                 </div>
                             </div>
-
-                            @if ($file->isImage())
-                                <img src="{{ route('books.files.preview', $file) }}" alt="{{ $file->original_name }}" class="img-fluid rounded mt-3">
-                            @elseif ($file->isPdf())
-                                <div class="ratio ratio-16x9 mt-3">
-                                    <iframe src="{{ route('books.files.preview', $file) }}" title="{{ $file->original_name }}"></iframe>
-                                </div>
-                            @endif
                         </div>
                     @empty
                         <div class="text-center text-muted py-5"><i class="bx bx-file d-block fs-1 mb-2"></i>لا توجد ملفات مرفوعة.</div>
@@ -67,4 +60,6 @@
             </div>
         </div>
     </div>
+
+    <x-ui.file-preview-modal :file="$previewFile" />
 </div>
